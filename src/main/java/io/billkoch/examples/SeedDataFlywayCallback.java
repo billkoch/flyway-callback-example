@@ -5,25 +5,34 @@ import com.google.common.io.Resources;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.callback.FlywayCallback;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
-import java.net.URL;
 import java.sql.Connection;
-import java.sql.SQLException;
 
 @Slf4j
 public class SeedDataFlywayCallback implements FlywayCallback {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public SeedDataFlywayCallback(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Override
     public void afterMigrate(Connection connection) {
         log.info("About to execute afterMigrate()...");
 
         try {
-            URL seedSqlLocation = Resources.getResource("db/seed.sql");
-            String sql = Resources.toString(seedSqlLocation, Charsets.UTF_8);
-            connection.prepareStatement(sql).execute();
-
-        } catch (SQLException | IOException e) {
+            Long peopleCount = jdbcTemplate.queryForObject("select count(*) from people", Long.class);
+            if(peopleCount == 0) {
+                log.info("No existing people found.  Running seed.sql");
+                String seedSql = Resources.toString(Resources.getResource("db/seed.sql"), Charsets.UTF_8);
+                jdbcTemplate.execute(seedSql);
+            } else {
+                log.info("Found existing people.  Ignoring seed.sql");
+            }
+        } catch (IOException e) {
             throw new FailedToLoadSeedDataException(e);
         }
         log.info("Finished executing afterMigrate()...");

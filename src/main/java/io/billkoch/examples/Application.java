@@ -2,12 +2,14 @@ package io.billkoch.examples;
 
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.callback.FlywayCallback;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,9 @@ public class Application {
 	@Configuration
 	class Config {
 
+		@Autowired
+		private JdbcTemplate jdbcTemplate;
+
 		@Bean
 		public FlywayMigrationInitializer flywayInitializer(Flyway flyway) {
 			flyway.setCallbacks(seedDataFlywayCallback());
@@ -28,7 +33,7 @@ public class Application {
 
 		@Bean
 		public FlywayCallback seedDataFlywayCallback() {
-			return new SeedDataFlywayCallback();
+			return new SeedDataFlywayCallback(jdbcTemplate);
 		}
 	}
 
