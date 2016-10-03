@@ -1,0 +1,6 @@
+spring.datasource:
+  url: jdbc:mysql://localhost:3306/example
+  username: some_user
+  password: some_password
+
+logging.level.io.billkoch: debug
